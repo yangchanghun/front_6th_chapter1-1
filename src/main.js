@@ -1,4 +1,5 @@
 import { HomePage } from "./pages/HomePage.js";
+import { loadProductData } from "./pages/HomePage.js";
 const enableMocking = () =>
   import("./mocks/browser.js").then(({ worker }) =>
     worker.start({
@@ -7,6 +8,7 @@ const enableMocking = () =>
   );
 
 function render() {
+  loadProductData();
   document.body.querySelector("#root").innerHTML = HomePage();
 }
 
