@@ -1,6 +1,6 @@
 // import { HomePage } from "./pages/HomePage.js";
 // import { loadProductData } from "./pages/HomePage.js";
-import { render } from "./router.js";
+import { render } from "./router/router.js";
 const enableMocking = () =>
   import("./mocks/browser.js").then(({ worker }) =>
     worker.start({
