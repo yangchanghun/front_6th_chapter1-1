@@ -1,5 +1,8 @@
-export const ProductFilter = (filter) => {
-  const { limit, sort } = filter;
+// import { Category1Depth } from "./category/Category2Depth";
+
+import { productState } from "../store/productState";
+
+export const ProductFilter = (productState) => {
   return /*html*/ `
   <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
   <!-- 검색창 -->
@@ -22,19 +25,34 @@ export const ProductFilter = (filter) => {
       <div class="flex items-center gap-2">
         <label class="text-sm text-gray-600">카테고리:</label>
         <button data-breadcrumb="reset" class="text-xs hover:text-blue-800 hover:underline">전체</button>
+        ${
+          productState.filters.category1
+            ? ` <span class="text-xs text-gray-500">&gt;</span><button data-breadcrumb="category1" data-category1=${productState.filters.category1} class="text-xs hover:text-blue-800 hover:underline">${productState.filters.category1}</button>`
+            : ""
+        }
+       ${
+         productState.filters.category2
+           ? `<span class="text-xs text-gray-500">&gt;</span><span class="text-xs text-gray-600 cursor-default">${productState.filters.category2}</span>`
+           : ""
+       }
+
       </div>
-      <!-- 1depth 카테고리 -->
-      <div class="flex flex-wrap gap-2">
-        <button data-category1="생활/건강" class="category1-filter-btn text-left px-3 py-2 text-sm rounded-md border transition-colors
-           bg-white border-gray-300 text-gray-700 hover:bg-gray-50">
-          생활/건강
-        </button>
-        <button data-category1="디지털/가전" class="category1-filter-btn text-left px-3 py-2 text-sm rounded-md border transition-colors
-           bg-white border-gray-300 text-gray-700 hover:bg-gray-50">
-          디지털/가전
-        </button>
-      </div>
-      <!-- 2depth 카테고리 -->
+      ${
+        productState.loading
+          ? `
+            <div class="flex flex-wrap gap-2">
+              <div class="text-sm text-gray-500 italic">카테고리 로딩 중...</div>
+            </div>
+          `
+          : productState.filters.category1
+            ? `<div class="flex flex-wrap gap-2">
+                    ${Object.keys(productState.categories[productState.filters.category1]).map(Category2Depth).join("")}
+                  </div>`
+            : Category1Depth()
+      }
+      
+
+
     </div>
     <!-- 기존 필터들 -->
     <div class="flex gap-2 items-center justify-between">
@@ -43,10 +61,10 @@ export const ProductFilter = (filter) => {
         <label class="text-sm text-gray-600">개수:</label>
         <select id="limit-select"
                 class="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
-                <option value="10" ${limit == 10 ? "selected" : ""}>10개</option>
-                <option value="20" ${limit == 20 ? "selected" : ""}>20개</option>
-                <option value="50" ${limit == 50 ? "selected" : ""}>50개</option>
-                <option value="100" ${limit == 100 ? "selected" : ""}>100개</option>
+                <option value="10" ${productState.filters.limit == 10 ? "selected" : ""}>10개</option>
+                <option value="20" ${productState.filters.limit == 20 ? "selected" : ""}>20개</option>
+                <option value="50" ${productState.filters.limit == 50 ? "selected" : ""}>50개</option>
+                <option value="100" ${productState.filters.limit == 100 ? "selected" : ""}>100개</option>
         </select>
       </div>
       <!-- 정렬 -->
@@ -54,14 +72,40 @@ export const ProductFilter = (filter) => {
         <label class="text-sm text-gray-600">정렬:</label>
         <select id="sort-select" class="text-sm border border-gray-300 rounded px-2 py-1
                      focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
-          <option value="price_asc"  ${sort == "price_asc" ? "selected" : ""}>가격 낮은순</option>
-          <option value="price_desc" ${sort == "price_desc" ? "selected" : ""}>가격 높은순</option>
-          <option value="name_asc" ${sort == "name_asc" ? "selected" : ""}>이름순</option>
-          <option value="name_desc" ${sort == "name_desc" ? "selected" : ""}>이름 역순</option>
+          <option value="price_asc"  ${productState.filters.sort == "price_asc" ? "selected" : ""}>가격 낮은순</option>
+          <option value="price_desc" ${productState.filters.sort == "price_desc" ? "selected" : ""}>가격 높은순</option>
+          <option value="name_asc" ${productState.filters.sort == "name_asc" ? "selected" : ""}>이름순</option>
+          <option value="name_desc" ${productState.filters.sort == "name_desc" ? "selected" : ""}>이름 역순</option>
         </select>
       </div>
     </div>
   </div>
 </div>
   `;
+};
+
+// 카테고리 전체눌렀을때 & 처음
+export const Category1Depth = () => {
+  return `
+        <div class="flex flex-wrap gap-2">
+        <button data-category1="생활/건강" class="category1-filter-btn text-left px-3 py-2 text-sm rounded-md border transition-colors
+           bg-white border-gray-300 text-gray-700 hover:bg-gray-50">
+          생활/건강
+        </button>
+        <button data-category1="디지털/가전" class="category1-filter-btn text-left px-3 py-2 text-sm rounded-md border transition-colors
+           bg-white border-gray-300 text-gray-700 hover:bg-gray-50">
+          디지털/가전
+        </button>
+      </div>`;
+};
+
+// 카테고리 눌렀을때
+
+export const Category2Depth = (category) => {
+  return /*html*/ `
+        <button data-category2=${category} class="category2-filter-btn text-left px-3 py-2 text-sm rounded-md border transition-colors
+        ${category === productState.filters.category2 ? `bg-blue-100 border-blue-300 text-blue-800` : `bg-white border-gray-300 text-gray-700 hover:bg-gray-50`}">
+          ${category}
+        </button>
+      `;
 };
