@@ -1,3 +1,5 @@
+import { getCartCount } from "../utils/cartUtil.js"; // 경로는 위치에 따라 조정
+
 export const Header = () => {
   return /*html*/ `<header class="bg-white shadow-sm sticky top-0 z-40">
         <div class="max-w-md mx-auto px-4 py-4">
@@ -24,7 +26,15 @@ export const CartButton = () => {
                             d="M3 3h2l.4 2M7 13h10l4-8H5.4m2.6 8L6 2H3m4 11v6a1 1 0 001 1h1a1 1 0 001-1v-6M13 13v6a1 1 0 001 1h1a1 1 0 001-1v-6"></path>
                     </svg>
                     <span
-                    class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">4</span>
+                    class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">${getCartCount()}</span>
                 </button>`
   );
 };
+
+export function updateCartIcon() {
+  const container = document.querySelector("#cart-icon-btn")?.parentElement;
+
+  if (container) {
+    container.innerHTML = CartButton();
+  }
+}
