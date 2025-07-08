@@ -5,27 +5,17 @@ import { ProductCard } from "../components/ProductCard";
 import { ProductFilter } from "../components/ProductFilter";
 import { ProductSkelleton } from "../components/ProductSkelleton";
 import { Footer } from "../components/Footer";
-// 상품조회state
-export const productState = {
-  products: [],
-  total: 0,
-  categories: [],
-  loading: false,
-  page: 1,
-  filters: {
-    search: "",
-    category1: "",
-    category2: "",
-    limit: 20,
-    sort: "price_asc",
-  },
-  hasMore: true,
-};
-
+import { productState } from "../store/productState";
+import { cartState, saveCartToStorage } from "../store/cartState";
 // 상품fetch
+import { loadCartFromStorage } from "../store/cartState";
+import { updateCartIcon } from "../components/Header.js";
+import { CartAddToast } from "../components/Toast.js";
 export async function loadProductData() {
   productState.loading = true;
 
+  // 장바구니 개수호출;;;
+  loadCartFromStorage();
   const [
     {
       products,
@@ -37,6 +27,8 @@ export async function loadProductData() {
       limit: productState.filters.limit,
       sort: productState.filters.sort,
       search: productState.filters.search,
+      category1: productState.filters.category1,
+      category2: productState.filters.category2,
     }),
     getCategories(),
   ]);
@@ -62,6 +54,67 @@ function bindEvents() {
   const limitSelect = document.querySelector("#limit-select");
   const sortSelect = document.querySelector("#sort-select");
   const inputSelect = document.querySelector("#search-input");
+  const category1Buttons = document.querySelectorAll(".category1-filter-btn");
+  const category2Buttons = document.querySelectorAll(".category2-filter-btn");
+  const cartAddButtons = document.querySelectorAll(".add-to-cart-btn");
+  const breadcrumbButtons = document.querySelectorAll("[data-breadcrumb]");
+
+  cartAddButtons.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const productId = e.target.dataset.productId;
+      const product = productState.products.find((p) => p.productId === productId);
+
+      if (!product) {
+        console.error("상품 정보 없음", productId);
+        return;
+      }
+
+      // 이미 담겨있는지 확인
+      const existing = cartState.items.find((item) => item.product.productId === productId);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        cartState.items.push({ product, quantity: 1 });
+      }
+
+      saveCartToStorage();
+      updateCartIcon(); // 장바구니 개수 UI 갱신
+      const toast = document.getElementById("cart-toast");
+      toast.style.display = "block";
+
+      setTimeout(() => {
+        toast.style.display = "none";
+      }, 1500);
+    });
+  });
+  // 브레드크럼
+  breadcrumbButtons.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const type = e.target.dataset.breadcrumb;
+
+      if (type === "reset") {
+        // 전체 버튼 클릭 시
+        productState.filters.category1 = "";
+        productState.filters.category2 = "";
+      } else if (type === "category1") {
+        // 1차 카테고리만 초기화
+        const category1 = e.target.dataset.category1;
+        productState.filters.category1 = category1;
+        productState.filters.category2 = "";
+      }
+
+      productState.page = 1;
+      loadProductData();
+    });
+  });
+
+  category2Buttons.forEach((btn) => {
+    btn.addEventListener("click", handleCategory2);
+  });
+
+  category1Buttons.forEach((btn) => {
+    btn.addEventListener("click", handleCategory1);
+  });
 
   if (limitSelect) {
     limitSelect.removeEventListener("change", limitChange);
@@ -81,6 +134,28 @@ function bindEvents() {
   window.removeEventListener("scroll", handleScroll);
   window.addEventListener("scroll", handleScroll);
 }
+
+async function handleCategory2(e) {
+  const category2 = e.target.dataset.category2;
+  console.log(category2);
+  productState.filters.search = "";
+  productState.filters.category2 = category2;
+  productState.page = 1;
+  loadProductData();
+}
+
+async function handleCategory1(e) {
+  const category1 = e.target.dataset.category1;
+  console.log(category1);
+  productState.filters.search = "";
+  productState.filters.category1 = category1;
+  productState.filters.category2 = ""; // category2 초기화
+  productState.page = 1;
+
+  loadProductData();
+}
+
+// 검색
 async function handleSearchInput(e) {
   if (e.key === "Enter") {
     const keyword = e.target.value.trim();
@@ -124,6 +199,9 @@ async function handleScroll() {
     const res = await getProducts({
       limit: productState.filters.limit,
       sort: productState.filters.sort,
+      search: productState.filters.search,
+      category1: productState.filters.category1,
+      category2: productState.filters.category2,
       page: productState.page,
     });
     const newProducts = res.products;
@@ -159,15 +237,8 @@ export const HomePage = () => {
     ${Header()}
     <main class="max-w-md mx-auto px-4 py-4">
       <!-- 카테고리 -->
-      ${
-        productState.loading
-          ? `<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
-              <div class="space-y-2">
-                <div class="text-sm text-gray-500 italic">카테고리 로딩 중...</div>
-              </div>
-            </div>`
-          : ProductFilter(productState.filters)
-      }
+         ${ProductFilter(productState)}
+
       <!-- 총상품 수-->
       ${
         productState.loading
@@ -194,6 +265,9 @@ export const HomePage = () => {
 
     </main>
     ${Footer()}
+    <div class="flex flex-col gap-2 items-center justify-center mx-auto" style="width: fit-content;">
+      ${CartAddToast()}
+    </div>
   </div>
   `;
 };
