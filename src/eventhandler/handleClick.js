@@ -64,7 +64,7 @@ export const cartClickHandler = async (e) => {
         productId: productData.productId,
         title: productData.title,
         image: productData.image,
-        price: productData.lprice,
+        price: productData.lprice.toLocaleString(),
         quantity: parseInt(quantity),
       };
       addCart(product, quantity);
