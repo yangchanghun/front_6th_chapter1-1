@@ -46,7 +46,7 @@
     "husky": "^9.1.7",
     "jsdom": "^25.0.1",
     "lint-staged": "^15.2.11",
-    "msw": "^2.10.2",
+    "msw": "^1.2.3",
     "prettier": "^3.4.2",
     "vite": "npm:rolldown-vite@latest",
     "vitest": "latest"

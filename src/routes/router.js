@@ -1,11 +1,9 @@
 const BASE_PATH = import.meta.env.PROD ? "/front_6th_chapter1-1" : "";
 
-// 전체 URL에서 BASE_PATH 제거한 앱 경로 구하기
 const getAppPath = (fullPath = window.location.pathname) => {
   return fullPath.startsWith(BASE_PATH) ? fullPath.slice(BASE_PATH.length) || "/" : fullPath;
 };
 
-// 앱 경로에 BASE_PATH 붙이기
 const getFullPath = (appPath) => BASE_PATH + appPath;
 
 import { productDetailPage, detailEvent } from "../pages/productDetailPage";
