@@ -1,4 +1,4 @@
-import { setupWorker } from "msw";
+import { setupWorker } from "msw/browser";
 import { handlers } from "./handlers";
 
 // // MSW 워커 설정
