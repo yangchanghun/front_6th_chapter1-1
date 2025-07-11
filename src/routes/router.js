@@ -1,42 +1,55 @@
-import { cartPage } from "../pages/cartPage";
-import { notFoundPage } from "../pages/notFoundPage";
-import { productDetailPage } from "../pages/productDetailPage";
+// import { cartPage } from "../pages/cartPage";
+// import { notFoundPage } from "../pages/notFoundPage";
+import { productDetailPage, detailEvent } from "../pages/productDetailPage";
 import { bindEvents } from "../pages/productPage";
 import { productPage } from "../pages/productPage";
+import { notFoundPage } from "../pages/notFoundPage";
+import { cartPage } from "../pages/cartPage";
 
-const ROUTES = {
-  MAIN: "/",
-  PRODUCT: "/product",
-  PRODUCT_DETAIL: "/product/detail",
-  CART: "/cart",
-  ERROR: "/error",
-};
-const URL_MAP = {
-  [ROUTES.MAIN]: productPage,
-  [ROUTES.PRODUCT]: productPage,
-  [ROUTES.PRODUCT_DETAIL]: productDetailPage,
-  [ROUTES.CART]: cartPage,
-  [ROUTES.ERROR]: notFoundPage,
-};
+let currentPath = location.pathname;
 
-export function navigate(pathname, replace = false) {
-  history[replace ? "replaceState" : "pushState"](null, "", pathname);
-  render(); // 라우팅 후 화면 다시 그리기
-}
+const routes = [
+  { path: "/", view: productPage },
+  { path: "/detail/:id", view: productDetailPage },
+  { path: "/cart", view: cartPage },
+];
 
-export function render() {
-  const root = document.querySelector("#root");
-  console.log(root);
-  let { pathname } = location;
-  if ((pathname === ROUTES.MAIN || pathname === ROUTES.PRODUCT) && pathname !== ROUTES.PRODUCT) {
-    return navigate(ROUTES.PRODUCT, true); // replace = true
+export async function render() {
+  const path = location.pathname;
+
+  // 현재 경로 업데이트
+  currentPath = path;
+
+  if (path.startsWith("/detail/")) {
+    const id = path.split("/detail/")[1];
+    await productDetailPage(id);
+    detailEvent();
+    return;
   }
 
-  const page = URL_MAP[pathname] || notFoundPage;
-  root.innerHTML = page();
-  bindEvents();
+  const route = routes.find((r) => r.path === path);
+  if (route) {
+    document.querySelector("#root").innerHTML = route.view();
+    bindEvents();
+  } else {
+    document.querySelector("#root").innerHTML = notFoundPage();
+  }
+}
+
+// 네비게이션 함수 개선
+export function navigateToDetail(productId) {
+  const newPath = `/detail/${productId}`;
+
+  // 현재 경로와 같으면 네비게이션하지 않음
+  if (currentPath === newPath) {
+    return;
+  }
+
+  history.pushState({}, "", newPath);
+  render();
 }
 
 window.addEventListener("popstate", () => {
-  render(); // 뒤로/앞으로 이동 시 렌더링
+  // 브라우저 뒤로가기/앞으로가기 시에만 렌더링
+  render();
 });

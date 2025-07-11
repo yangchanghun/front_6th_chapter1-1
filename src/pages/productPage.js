@@ -1,10 +1,48 @@
 import { render } from "../routes/router";
 import { handleScroll } from "../eventhandler/handleScroll";
+import { localState, addCart } from "../store/localState";
+import { getQuery, updateURLFilters } from "../utils/queryFind";
+import { navigateToDetail } from "../routes/router";
+import { cartModal } from "./cartPage";
 
 export const bindEvents = () => {
   const limitSelect = document.querySelector("#limit-select");
   const sortSelect = document.querySelector("#sort-select");
   const inputSelect = document.querySelector("#search-input");
+  const root = document.querySelector("#root");
+  const cartBtn = document.querySelector("#cart-icon-btn");
+  const cartCloseBtn = document.querySelector("#cart-modal-close-btn");
+
+  const cartDisplayBtn = document.querySelector(".cart-modal-overlay");
+
+  // 상세페이지 버튼
+  root.addEventListener("click", (e) => {
+    if (e.target.closest(".add-to-cart-btn")) return;
+    const card = e.target.closest(".product-card");
+    if (card) {
+      const productId = card.getAttribute("data-product-id");
+      navigateToDetail(productId);
+      console.log("발동");
+    }
+  });
+
+  // [1] 장바구니 버튼 - 이벤트 위임
+  root.addEventListener("click", (e) => {
+    if (e.target.matches(".add-to-cart-btn")) {
+      e.stopPropagation();
+      const productCard = e.target.closest(".product-card");
+      if (productCard) {
+        const product = {
+          productId: e.target.getAttribute("data-product-id"),
+          title: productCard.querySelector("h3").textContent,
+          image: productCard.querySelector("img").src,
+          lprice: productCard.querySelector(".text-lg").textContent.replace("원", "").replace(",", ""),
+        };
+        addCart(product);
+      }
+    }
+  });
+
   window.removeEventListener("scroll", handleScroll);
   window.addEventListener("scroll", handleScroll);
   if (limitSelect) {
@@ -12,6 +50,7 @@ export const bindEvents = () => {
       pageState.limit = Number(e.target.value);
       pageState.page = 1; // 페이지도 초기화
       state.products = []; // 안전하게 초기화
+      updateURLFilters();
       getProducts(true); // true 전달해서 초기화
     });
     if (sortSelect) {
@@ -19,6 +58,7 @@ export const bindEvents = () => {
         filterState.sort = e.target.value;
         pageState.page = 1; // 페이지도 초기화
         state.products = []; // 안전하게 초기화
+        updateURLFilters();
         getProducts(true); // true 전달해서 초기화
       });
     }
@@ -29,8 +69,29 @@ export const bindEvents = () => {
           filterState.search = e.target.value;
           pageState.page = 1; // 페이지도 초기화
           state.products = []; // 안전하게 초기화
+          updateURLFilters();
           getProducts(true);
         }
+      });
+    }
+
+    if (cartBtn) {
+      cartBtn.addEventListener("click", () => {
+        state.modalView = true;
+        console.log(state.modalView);
+        render();
+      });
+    }
+    if (cartCloseBtn) {
+      cartCloseBtn.addEventListener("click", () => {
+        state.modalView = false;
+        render();
+      });
+    }
+    if (cartDisplayBtn) {
+      cartDisplayBtn.addEventListener("click", () => {
+        state.modalView = false;
+        render();
       });
     }
   }
@@ -58,6 +119,7 @@ export let state = {
   error: null,
   products: [],
   hasSearched: false, //
+  modalView: false,
 };
 
 export async function getProducts() {
@@ -101,6 +163,16 @@ export async function getProducts() {
 
 export function productPage() {
   if (!state.isLoading && state.products.length === 0 && !state.hasSearched) {
+    const query = getQuery();
+    filterState.search = query.search || "";
+    filterState.sort = query.sort || "price_asc";
+    filterState.category1 = query.category1 || "";
+    filterState.category2 = query.category2 || "";
+
+    // pageState 설정
+    pageState.limit = Number(query.limit) || 20;
+    pageState.page = Number(query.page) || 1;
+
     getProducts(true); // 최초 호출 시 데이터 요청
   }
   return state.isLoading ? loadingContent() : productContent();
@@ -135,7 +207,7 @@ export function productItem() {
       <button
         class="w-full bg-blue-600 text-white text-sm py-2 px-3 rounded-md
                          hover:bg-blue-700 transition-colors add-to-cart-btn"
-        data-product-id="85067212996"
+        data-product-id=${product.productId}
       >
         장바구니 담기
       </button>
@@ -145,6 +217,7 @@ export function productItem() {
     .join("");
 }
 function productContent() {
+  // bindEvents();
   return /* HTML */ `
     <div class="bg-gray-50">
       <header class="bg-white shadow-sm sticky top-0 z-40">
@@ -164,10 +237,12 @@ function productContent() {
                     d="M3 3h2l.4 2M7 13h10l4-8H5.4m2.6 8L6 2H3m4 11v6a1 1 0 001 1h1a1 1 0 001-1v-6M13 13v6a1 1 0 001 1h1a1 1 0 001-1v-6"
                   ></path>
                 </svg>
-                <span
+                ${localState.items.length
+                  ? `                <span
                   class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
-                  >4</span
-                >
+                  >${localState.items.length}</span
+                >`
+                  : ""}
               </button>
             </div>
           </div>
@@ -275,6 +350,7 @@ function productContent() {
         <div class="max-w-md mx-auto py-8 text-center text-gray-500">
           <p>© 2025 항해플러스 프론트엔드 쇼핑몰</p>
         </div>
+        ${state.modalView && cartModal(localState.items.length)}
       </footer>
     </div>
   `;
@@ -299,7 +375,15 @@ function loadingContent() {
                     stroke-width="2"
                     d="M3 3h2l.4 2M7 13h10l4-8H5.4m2.6 8L6 2H3m4 11v6a1 1 0 001 1h1a1 1 0 001-1v-6M13 13v6a1 1 0 001 1h1a1 1 0 001-1v-6"
                   ></path>
-                </svg>
+                </svg>${
+                  localState.items.length
+                    ? `<span
+                  class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
+                  >${localState.items.length}</span
+                >`
+                    : ""
+                }
+                    
               </button>
             </div>
           </div>
@@ -354,10 +438,10 @@ function loadingContent() {
                   id="limit-select"
                   class="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="10">10개</option>
-                  <option value="20" selected="">20개</option>
-                  <option value="50">50개</option>
-                  <option value="100">100개</option>
+                  <option value="10" ${pageState.limit == 10 ? "selected" : ""}>10개</option>
+                  <option value="20" ${pageState.limit == 20 ? "selected" : ""}>20개</option>
+                  <option value="50" ${pageState.limit == 50 ? "selected" : ""}>50개</option>
+                  <option value="100" ${pageState.limit == 100 ? "selected" : ""}>100개</option>
                 </select>
               </div>
               <!-- 정렬 -->
@@ -368,10 +452,10 @@ function loadingContent() {
                   class="text-sm border border-gray-300 rounded px-2 py-1
                              focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="price_asc" selected="">가격 낮은순</option>
-                  <option value="price_desc">가격 높은순</option>
-                  <option value="name_asc">이름순</option>
-                  <option value="name_desc">이름 역순</option>
+                  <option value="price_asc" ${filterState.sort == "price_asc" ? "selected" : ""}>가격 낮은순</option>
+                  <option value="price_desc" ${filterState.sort == "price_desc" ? "selected" : ""}>가격 높은순</option>
+                  <option value="name_asc" ${filterState.sort == "name_asc" ? "selected" : ""}>이름순</option>
+                  <option value="name_desc" ${filterState.sort == "name_desc" ? "selected" : ""}>이름 역순</option>
                 </select>
               </div>
             </div>

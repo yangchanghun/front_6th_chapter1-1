@@ -1,5 +1,6 @@
 import { state, pageState } from "../pages/productPage";
 import { getProducts } from "../pages/productPage";
+import { getQuery } from "../utils/queryFind";
 
 export async function handleScroll() {
   if (state.isLoading || !pageState.hasNext) return;
@@ -7,11 +8,10 @@ export async function handleScroll() {
   const scrollY = window.scrollY;
   const windowHeight = window.innerHeight;
   const documentHeight = document.body.offsetHeight;
-
+  const query = getQuery();
   if (windowHeight + scrollY >= documentHeight - 100) {
     console.log("다음 상품출력");
 
-    // ✅ 스피너 추가
     const grid = document.querySelector("#products-grid");
     const spinner = document.createElement("div");
     spinner.id = "infinite-scroll-spinner";
@@ -29,11 +29,10 @@ export async function handleScroll() {
       </div>
     `;
     grid?.appendChild(spinner);
-    pageState.limit = 20;
+    pageState.limit = query.limit;
     pageState.page += 1;
     await getProducts();
 
-    // ✅ 스피너 제거
     document.getElementById("infinite-scroll-spinner")?.remove();
   }
 }

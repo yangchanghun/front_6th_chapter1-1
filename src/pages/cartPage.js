@@ -1,5 +1,6 @@
 export function emptyCartContent() {
   return `
+
     <div class="flex min-h-full items-end justify-center p-0 sm:items-center sm:p-4">
       <div class="relative bg-white rounded-t-lg sm:rounded-lg shadow-xl w-full max-w-md sm:max-w-lg max-h-[90vh] overflow-hidden">
         <!-- 헤더 -->
@@ -346,4 +347,12 @@ export function cartPage() {
       </div>
     </div>
   `;
+}
+
+export function cartModal(count) {
+  return `
+        <div class="fixed inset-0 z-50 overflow-y-auto cart-modal">
+            <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity cart-modal-overlay"></div>
+        ${count > 0 ? cartPage() : emptyCartContent()}
+        </div>`;
 }
