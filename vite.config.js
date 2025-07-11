@@ -16,8 +16,10 @@
 
 import { defineConfig } from "vitest/config";
 
+const isProd = process.env.GITHUB_ACTIONS === "true";
+
 export default defineConfig({
-  base: process.env.NODE_ENV === "production" ? "/front_6th_chapter1-1/" : "/",
+  base: isProd ? "/front_6th_chapter1-1/" : "/",
 
   build: {
     outDir: "dist",
