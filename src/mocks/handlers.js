@@ -65,14 +65,14 @@ function filterProducts(products, query) {
 export const handlers = [
   // 상품 목록 API
   http.get("/api/products", async ({ request }) => {
-    const url = new URL(request.url);
+    const url = new URL(request.request.url); // ✅ 이 부분 변경
+
     const page = parseInt(url.searchParams.get("page") ?? url.searchParams.get("current")) || 1;
     const limit = parseInt(url.searchParams.get("limit")) || 20;
     const search = url.searchParams.get("search") || "";
     const category1 = url.searchParams.get("category1") || "";
     const category2 = url.searchParams.get("category2") || "";
     const sort = url.searchParams.get("sort") || "price_asc";
-
     // 필터링된 상품들
     const filteredProducts = filterProducts(items, {
       search,
