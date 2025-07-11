@@ -1,11 +1,8 @@
-// import { setupWorker } from "msw/browser";
-// import { handlers } from "./handlers";
+import { setupWorker } from "msw";
+import { handlers } from "./handlers";
 
 // // MSW 워커 설정
 // export const worker = setupWorker(...handlers);
-
-import { setupWorker } from "msw";
-import { handlers } from "./handlers"; // <- 이 파일이 있어야 함
 
 const basePath = import.meta.env.PROD ? "/front_6th_chapter1-1" : "";
 
