@@ -1,12 +1,20 @@
-// import { cartPage } from "../pages/cartPage";
-// import { notFoundPage } from "../pages/notFoundPage";
+const BASE_PATH = import.meta.env.PROD ? "/front_6th_chapter1-1" : "";
+
+// 전체 URL에서 BASE_PATH 제거한 앱 경로 구하기
+const getAppPath = (fullPath = window.location.pathname) => {
+  return fullPath.startsWith(BASE_PATH) ? fullPath.slice(BASE_PATH.length) || "/" : fullPath;
+};
+
+// 앱 경로에 BASE_PATH 붙이기
+const getFullPath = (appPath) => BASE_PATH + appPath;
+
 import { productDetailPage, detailEvent } from "../pages/productDetailPage";
 import { bindEvents } from "../pages/productPage";
 import { productPage } from "../pages/productPage";
 import { notFoundPage } from "../pages/notFoundPage";
 import { cartPage } from "../pages/cartPage";
 
-let currentPath = location.pathname;
+let currentPath = getAppPath();
 
 const routes = [
   { path: "/", view: productPage },
@@ -15,7 +23,7 @@ const routes = [
 ];
 
 export async function render() {
-  const path = location.pathname;
+  const path = getAppPath();
 
   // 현재 경로 업데이트
   currentPath = path;
@@ -40,16 +48,12 @@ export async function render() {
 export function navigateToDetail(productId) {
   const newPath = `/product/${productId}`;
 
-  // 현재 경로와 같으면 네비게이션하지 않음
-  if (currentPath === newPath) {
-    return;
-  }
+  if (currentPath === newPath) return;
 
-  history.pushState({}, "", newPath);
+  history.pushState({}, "", getFullPath(newPath));
   render();
 }
 
 window.addEventListener("popstate", () => {
-  // 브라우저 뒤로가기/앞으로가기 시에만 렌더링
   render();
 });
