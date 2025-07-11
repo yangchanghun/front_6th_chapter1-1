@@ -10,7 +10,7 @@ let currentPath = location.pathname;
 
 const routes = [
   { path: "/", view: productPage },
-  { path: "/detail/:id", view: productDetailPage },
+  { path: "/product/:id", view: productDetailPage },
   { path: "/cart", view: cartPage },
 ];
 
@@ -20,8 +20,8 @@ export async function render() {
   // 현재 경로 업데이트
   currentPath = path;
 
-  if (path.startsWith("/detail/")) {
-    const id = path.split("/detail/")[1];
+  if (path.startsWith("/product/")) {
+    const id = path.split("/product/")[1];
     await productDetailPage(id);
     detailEvent();
     return;
@@ -38,7 +38,7 @@ export async function render() {
 
 // 네비게이션 함수 개선
 export function navigateToDetail(productId) {
-  const newPath = `/detail/${productId}`;
+  const newPath = `/product/${productId}`;
 
   // 현재 경로와 같으면 네비게이션하지 않음
   if (currentPath === newPath) {
